@@ -1,3 +1,4 @@
+<!-- popup.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,11 +7,14 @@
         body {
             width: 400px;
             padding: 20px;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
         }
         #explanation {
             margin-top: 20px;
             white-space: pre-wrap;
+            font-size: 15px;
+            color: #202124;
         }
         button {
             padding: 10px 20px;
@@ -19,11 +23,20 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #1557b0;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
-    <button id="getExplanation">Explain</button>
+    <button id="getExplanation">Explain Monte Carlo Simulation</button>
     <div id="explanation"></div>
     <script src="popup.js"></script>
 </body>
