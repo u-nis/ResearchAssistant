@@ -1,20 +1,30 @@
-<!-- popup.html -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Research Assistant</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Term Explanation</title>
+    <style>
+        body {
+            width: 400px;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        #explanation {
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div id="chat-container">
-            <div id="messages"></div>
-        </div>
-        <div class="input-container">
-            <textarea id="user-input" placeholder="Type your message..."></textarea>
-            <button id="send-button">Send</button>
-        </div>
-    </div>
+    <button id="getExplanation">Explain</button>
+    <div id="explanation"></div>
     <script src="popup.js"></script>
 </body>
 </html>
