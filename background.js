@@ -3,12 +3,13 @@ const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-
 
 // Listen for messages from content.js.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === 'get-explanation') {
-        fetchGeminiResponse(createExplanationPrompt(testTerm))
-            .then(chunks => sendResponse({success: true, data: chunks}))
-            .catch(error => sendResponse({success: false, error: error.message}));
-        return true;
-    }
+  if (request.type === 'get-explanation') {
+    const term = request.term || "example term";
+    fetchGeminiResponse(createExplanationPrompt(term))
+      .then(response => sendResponse({ success: true, data: response }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Keeps the messaging channel open for async response.
+  }
 });
 
 function createExplanationPrompt(word) {
@@ -21,40 +22,20 @@ Include:
 }
 
 async function fetchGeminiResponse(prompt) {
-
-    try {
-        const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 800,
-                }
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const text = data.candidates[0].content.parts[0].text;
-        
-        // Split response into chunks and send each chunk
-        const chunks = text.split(/[.!?]\s+/);
-        return chunks;
-    } catch (error) {
-        console.error('Gemini API Error:', error);
-        throw error;
-
+  try {
+    const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`API request failed with status: ${response.status}`);
     }
     const data = await response.json();
     // Return the Gemini response text.
@@ -64,4 +45,3 @@ async function fetchGeminiResponse(prompt) {
     throw error;
   }
 }
-
