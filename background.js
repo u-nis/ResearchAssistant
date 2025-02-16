@@ -9,7 +9,7 @@ const testTerm = "Monte Carlo Simulation";
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'get-explanation') {
         fetchGeminiResponse(createExplanationPrompt(testTerm))
-            .then(response => sendResponse({success: true, data: response}))
+            .then(chunks => sendResponse({success: true, data: chunks}))
             .catch(error => sendResponse({success: false, error: error.message}));
         return true;
     }
@@ -36,7 +36,11 @@ async function fetchGeminiResponse(prompt) {
                     parts: [{
                         text: prompt
                     }]
-                }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 800,
+                }
             })
         });
 
@@ -45,9 +49,14 @@ async function fetchGeminiResponse(prompt) {
         }
 
         const data = await response.json();
-        return data.candidates[0].content.parts[0].text;
+        const text = data.candidates[0].content.parts[0].text;
+        
+        // Split response into chunks and send each chunk
+        const chunks = text.split(/[.!?]\s+/);
+        return chunks;
     } catch (error) {
         console.error('Gemini API Error:', error);
         throw error;
     }
 }
+
