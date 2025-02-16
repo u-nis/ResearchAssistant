@@ -56,7 +56,7 @@ function removeIcon() {
   }
 }
 
-// Open the response box beneath the selected text.
+// Open the response box beneath the selected text and update with Gemini output.
 function openResponseBox(rect, selectedText) {
   removeResponseBox(); // Clear any existing box
   
@@ -65,7 +65,8 @@ function openResponseBox(rect, selectedText) {
   responseBox.style.left = `${window.scrollX + rect.left}px`;
   responseBox.style.top = `${window.scrollY + rect.bottom + 10}px`;
   responseBox.style.width = "250px";
-  responseBox.style.height = "150px";
+  responseBox.style.minHeight = "150px"; // Minimum height
+  // Remove fixed height so the box adapts to its content.
   responseBox.style.backgroundColor = "white";
   responseBox.style.border = "1px solid black";
   responseBox.style.borderRadius = "5px";
@@ -73,19 +74,28 @@ function openResponseBox(rect, selectedText) {
   responseBox.style.boxShadow = "2px 2px 10px rgba(0,0,0,0.3)";
   responseBox.style.zIndex = "1000";
   responseBox.style.color = "black"; // Force text color to black
+  
   responseBox.innerHTML = `
     <div style="font-size:14px;font-weight:bold;margin-bottom:5px;">Research Assistant</div>
-    <div id="llmResponse" style="min-height:80px;">Loading...</div>
+    <div id="llmResponse" style="min-height:80px;">Loading explanation...</div>
   `;
+  
   document.body.appendChild(responseBox);
   
-  // Simulate an LLM response after 1 second (replace with actual API call later)
-  setTimeout(() => {
-    const llmDiv = document.getElementById("llmResponse");
-    if (llmDiv) {
-      llmDiv.textContent = "This is where the LLM response will go!";
+  // Send the selected term to the background script for Gemini output.
+  chrome.runtime.sendMessage(
+    { type: 'get-explanation', term: selectedText },
+    (response) => {
+      const llmDiv = document.getElementById("llmResponse");
+      if (llmDiv) {
+        if (response && response.success) {
+          llmDiv.textContent = response.data;
+        } else {
+          llmDiv.textContent = "Error: " + (response ? response.error : "No response");
+        }
+      }
     }
-  }, 1000);
+  );
 }
 
 // Remove the response box.
