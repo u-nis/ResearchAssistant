@@ -14,8 +14,7 @@ document.addEventListener("mouseup", () => {
   }, 50);
 });
 
-// Global mousedown: if click is outside the popup icon, remove it.
-// Also, if click is outside the response box, remove that too.
+// Global mousedown: if click is outside the popup icon and response box, remove them.
 document.addEventListener("mousedown", (e) => {
   if (popupIcon && !popupIcon.contains(e.target)) {
     removeIcon();
@@ -30,19 +29,20 @@ function createIcon(rect, selectedText) {
   removeIcon(); // Clean up any existing icon
   
   popupIcon = document.createElement("div");
-  popupIcon.textContent = "X"; // Your icon text
+  popupIcon.textContent = "X"; // Icon text (can change as needed)
   popupIcon.style.position = "absolute";
   popupIcon.style.left = `${window.scrollX + rect.right + 5}px`;
   popupIcon.style.top = `${window.scrollY + rect.top - 5}px`;
   popupIcon.style.cursor = "pointer";
   popupIcon.style.fontSize = "18px";
   popupIcon.style.backgroundColor = "white";
+  popupIcon.style.color = "black"; // Force text color to black
   popupIcon.style.zIndex = "1000";
   document.body.appendChild(popupIcon);
   
   // Use mousedown so it fires before the selection clears.
   popupIcon.addEventListener("mousedown", (e) => {
-    e.stopPropagation(); // Prevents global handler from immediately removing it.
+    e.stopPropagation();
     removeIcon(); // Remove the icon immediately on click.
     openResponseBox(rect, selectedText);
   });
@@ -58,7 +58,7 @@ function removeIcon() {
 
 // Open the response box beneath the selected text.
 function openResponseBox(rect, selectedText) {
-  removeResponseBox(); // Clear any existing box.
+  removeResponseBox(); // Clear any existing box
   
   responseBox = document.createElement("div");
   responseBox.style.position = "absolute";
@@ -72,13 +72,14 @@ function openResponseBox(rect, selectedText) {
   responseBox.style.padding = "10px";
   responseBox.style.boxShadow = "2px 2px 10px rgba(0,0,0,0.3)";
   responseBox.style.zIndex = "1000";
+  responseBox.style.color = "black"; // Force text color to black
   responseBox.innerHTML = `
     <div style="font-size:14px;font-weight:bold;margin-bottom:5px;">Research Assistant</div>
     <div id="llmResponse" style="min-height:80px;">Loading...</div>
   `;
   document.body.appendChild(responseBox);
   
-  // Placeholder: simulate an API response after 1 second.
+  // Simulate an LLM response after 1 second (replace with actual API call later)
   setTimeout(() => {
     const llmDiv = document.getElementById("llmResponse");
     if (llmDiv) {
