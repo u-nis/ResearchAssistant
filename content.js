@@ -102,7 +102,7 @@ function openResponseBox(rect, selectedText) {
     zIndex: "1000",
     fontFamily: "'Google Sans', sans-serif",
     fontSize: "15px",
-    lineHeight: "1.6",
+    lineHeight: "1.0",
     letterSpacing: "0.2px",
     color: "#333333"
 });
@@ -110,7 +110,7 @@ function openResponseBox(rect, selectedText) {
   responseBox.innerHTML = `
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
     <div style="font-family: 'Google Sans', sans-serif; font-weight: 500; color: #1a73e8;">Research Assistant</div>
-    <div style="cursor: pointer; padding: 4px" onclick="this.parentElement.parentElement.remove()">✕</div>
+    <div id="closeButton" style="cursor: pointer; padding: 4px">✕</div>
   </div>
   <div id="llmResponse" style="min-height: 80px;">
     <div class="loading-animation">
@@ -123,6 +123,8 @@ function openResponseBox(rect, selectedText) {
   </div>
 `;
 
+const closeButton = responseBox.querySelector('#closeButton');
+closeButton.addEventListener('click', removeResponseBox);
   
   const style = document.createElement('style');
 style.textContent = `
@@ -256,8 +258,8 @@ function formatResponse(text) {
         </div>`)
       .replace(/\n\n/g, '<div style="margin: 6px 0;"></div>')
       .replace(/(Definition:|Context:|Real-World Examples:|Related Key Concepts:)/g, 
-        '<div style="font-weight: 500; color:rgb(26, 115, 232); margin-top: 8px; margin-bottom: 4px;">$1</div>')
-      .replace(/\n/g, '<br>');
+        '<div style="font-weight: 500; color:rgb(26, 115, 232); margin-top: 4px; margin-bottom: 2px;">$1</div>')
+        .replace(/\n\n/g, '<div style="margin: 2px 0;"></div>');
 
     return `
       <div style="font-family: 'Google Sans', sans-serif; line-height: 1.3;">
