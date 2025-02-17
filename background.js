@@ -1,14 +1,39 @@
-const GEMINI_API_KEY = 'AIzaSyCxuRAnHlObdy4oK_LBzkvUySK7SpLppKA';
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Listen for messages from content.js.
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'get-explanation') {
-    const term = request.term || "example term";
-    fetchGeminiResponse(createExplanationPrompt(term))
-      .then(response => sendResponse({ success: true, data: response }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true; // Keeps the messaging channel open for async response.
+const GEMINI_API_KEY = 'AIzaSyCxuRAnHlObdy4oK_LBzkvUySK7SpLppKA';
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// Listen for long-lived connections (ports) from content/popup.
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name === 'explanation-stream') {
+    port.onMessage.addListener(async (msg) => {
+      if (msg.type === 'get-explanation') {
+        const term = msg.term || "example term";
+        try {
+          const prompt = createExplanationPrompt(term);
+          // Start a chat with the prompt as history.
+          const chat = model.startChat({
+            history: [
+              { role: "user", parts: [{ text: prompt }] }
+            ]
+          });
+          // Send a streaming message.
+          const result = await chat.sendMessageStream(prompt);
+          // Iterate over the streamed tokens.
+          for await (const chunk of result.stream) {
+            const token = chunk.text();
+            console.log("Streaming token:", token);
+            port.postMessage({ token });
+          }
+          // Indicate that streaming is complete.
+          port.postMessage({ done: true });
+        } catch (error) {
+          console.error("Error in streaming chat:", error);
+          port.postMessage({ error: error.message });
+        }
+      }
+    });
   }
 });
 
@@ -19,29 +44,4 @@ Include:
 - The context where it is used
 - Real-world examples or applications
 - Related key concepts.`;
-}
-
-async function fetchGeminiResponse(prompt) {
-  try {
-    const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }]
-      })
-    });
-    if (!response.ok) {
-      throw new Error(`API request failed with status: ${response.status}`);
-    }
-    const data = await response.json();
-    // Return the Gemini response text.
-    return data.candidates[0].content.parts[0].text;
-  } catch (error) {
-    console.error('Gemini API Error:', error);
-    throw error;
-  }
 }

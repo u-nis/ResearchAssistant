@@ -5,10 +5,12 @@
   "description": "Context-aware research assistant powered by Gemini",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "scripting"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "bundle.js",
+    "type": "module"
   },
   "action": {
     "default_popup": "popup.html"
