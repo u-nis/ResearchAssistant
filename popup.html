@@ -65,18 +65,15 @@
         background: linear-gradient(135deg, #5290f5 0%, #9778fd 100%);
       }
 
-      button:active {
-        transform: translateY(0);
-      }
-
+      /* Button when pressed */
       button.active {
-        background: linear-gradient(135deg, #34A853 0%, #1e8e3e 100%);
+        background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%); /* New orange color */
         transform: none;
       }
 
+      /* Hover effect for active button */
       button.active:hover {
-        background: linear-gradient(135deg, #34A853 0%, #1e8e3e 100%);
-        transform: none;
+        background: linear-gradient(135deg, #FF7043 0%, #D84315 100%);
       }
 
       button.clicked {
@@ -141,32 +138,6 @@
         Context captured successfully
       </div>
     </div>
-    <script>
-      const button = document.getElementById('addContextBtn');
-      const confirmation = document.getElementById('confirmationMessage');
-      let isActive = false;
-
-      button.addEventListener('click', () => {
-        isActive = !isActive;
-        
-        if (isActive) {
-          button.classList.add('active');
-        } else {
-          button.classList.remove('active');
-        }
-        
-        button.classList.add('clicked');
-        confirmation.classList.add('show');
-        
-        setTimeout(() => {
-          button.classList.remove('clicked');
-        }, 300);
-
-        setTimeout(() => {
-          confirmation.classList.remove('show');
-        }, 3000);
-      });
-    </script>
     <script src="popup.js"></script>
   </body>
 </html>
