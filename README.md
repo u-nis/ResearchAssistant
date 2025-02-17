@@ -1,7 +1,7 @@
 # ResearchAssistant
 
 ---
-![Project Research Assistant](RA.jpg)
+![Project Research Assistant](assets/RA.jpg)
 ---
 
 # **Project Research Assistant**  
@@ -63,6 +63,8 @@ Reading research papers, technical articles, or documentation shouldn’t feel l
 - **Chrome Storage API**  
 - **Google Fonts (Google Sans, Open Sans)**  
 
+---
+![Project Research Assistant](assets/RA.gif)
 ---
 
 ## **How It Works**  
