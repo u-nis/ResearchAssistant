@@ -1,25 +1,171 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>add Page Context</title>
+    <title>Research Assistant</title>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap');
+
       body {
         width: 300px;
-        padding: 20px;
-        font-family: Arial, sans-serif;
+        padding: 24px;
+        margin: 0;
+        background-color: #f8f9fa;
+        font-family: 'Google Sans', Arial, sans-serif;
+        border-radius: 16px;
       }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background-color: white;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      .header {
+        font-size: 18px;
+        font-weight: 500;
+        color: #1f1f1f;
+        margin-bottom: 8px;
+      }
+
+      .action-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .label {
+        font-size: 14px;
+        color: #5f6368;
+      }
+
       button {
-        padding: 10px 20px;
-        background-color: #1a73e8;
-        color: white;
+        width: 25px;
+        height: 25px;
+        padding: 6px;
+        background: linear-gradient(135deg, #4285f4 0%, #8e6bfd 100%);
+        color: #ffffff;
         border: none;
-        border-radius: 4px;
+        border-radius: 100px;
         cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #5290f5 0%, #9778fd 100%);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button.active {
+        background: linear-gradient(135deg, #34A853 0%, #1e8e3e 100%);
+        transform: none;
+      }
+
+      button.active:hover {
+        background: linear-gradient(135deg, #34A853 0%, #1e8e3e 100%);
+        transform: none;
+      }
+
+      button.clicked {
+        animation: pulse 0.3s ease-out;
+      }
+
+      .confirmation {
+        display: none;
+        color: #34A853;
+        font-size: 13px;
+        padding: 8px 16px;
+        background-color: #F1F8F1;
+        border-radius: 8px;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .confirmation.show {
+        display: flex;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.98); }
+        100% { transform: scale(1); }
+      }
+
+      .icon {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+      }
+
+      .check-icon {
+        width: 14px;
+        height: 14px;
+        fill: #34A853;
       }
     </style>
   </head>
   <body>
-    <button id="addContextBtn">add Page Context</button>
+    <div class="container">
+      <div class="header">Research Assistant</div>
+      <div class="action-row">
+        <span class="label">Context Aware</span>
+        <button id="addContextBtn">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirmation" id="confirmationMessage">
+        <svg class="check-icon" viewBox="0 0 24 24">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        Context captured successfully
+      </div>
+    </div>
+    <script>
+      const button = document.getElementById('addContextBtn');
+      const confirmation = document.getElementById('confirmationMessage');
+      let isActive = false;
+
+      button.addEventListener('click', () => {
+        isActive = !isActive;
+        
+        if (isActive) {
+          button.classList.add('active');
+        } else {
+          button.classList.remove('active');
+        }
+        
+        button.classList.add('clicked');
+        confirmation.classList.add('show');
+        
+        setTimeout(() => {
+          button.classList.remove('clicked');
+        }, 300);
+
+        setTimeout(() => {
+          confirmation.classList.remove('show');
+        }, 3000);
+      });
+    </script>
     <script src="popup.js"></script>
   </body>
 </html>
