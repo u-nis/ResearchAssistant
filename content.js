@@ -3,7 +3,6 @@ let responseBox = null;
 
 // At the very top of your content.js:
 chrome.storage.sync.remove("contextIconState", () => {
-  console.log("Reset contextIconState to default on page refresh.");
 });
 
 let extensionEnabled = true; // Default is enabled
@@ -21,7 +20,6 @@ chrome.storage.sync.get("extensionEnabled", (data) => {
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "sync" && changes.extensionEnabled) {
     extensionEnabled = changes.extensionEnabled.newValue;
-    console.log("Content script: extensionEnabled updated to", extensionEnabled);
     if (!extensionEnabled) {
       removeIcon();
       removeResponseBox();
@@ -31,7 +29,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 // Clear chat on load.
 chrome.runtime.sendMessage({ type: 'clear-chat' }, (response) => {
-  console.log("Clear chat response:", response);
 });
 
 document.addEventListener("mouseup", () => {
@@ -230,7 +227,6 @@ function openResponseBox(rect, selectedText) {
       currentText += msg.token;
       llmDiv.innerHTML = formatStreamingResponse(currentText);
     } else if (msg.done) {
-      console.log("Streaming complete.");
       port.disconnect();
     } else if (msg.error) {
       llmDiv.innerHTML = `<div style="color: #d32f2f;">Error: ${msg.error}</div>`;

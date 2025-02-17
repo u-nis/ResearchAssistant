@@ -56,7 +56,6 @@ chrome.storage.sync.get("extensionEnabled", (data) => {
   }
   toggleCheckbox.checked = enabled;
   updateDisabledStyles(enabled);
-  console.log("Popup: extensionEnabled loaded as", enabled);
 });
 
 // Listen for toggle switch changes.
@@ -64,7 +63,6 @@ toggleCheckbox.addEventListener("change", () => {
   const newState = toggleCheckbox.checked;
   chrome.storage.sync.set({ extensionEnabled: newState }, () => {
     updateDisabledStyles(newState);
-    console.log("Popup: extensionEnabled updated to", newState);
     chrome.runtime.sendMessage({ type: "update-extension-state", enabled: newState });
   });
 });
@@ -81,7 +79,6 @@ chrome.storage.sync.get("currentPreset", (data) => {
     radio.checked = (radio.value === currentPreset);
   });
   updateIndicator(false); // update indicator without animation on load
-  console.log("Popup: currentPreset loaded as", currentPreset);
 });
 
 const updateIndicator = (animate = true) => {
@@ -109,7 +106,6 @@ radioButtons.forEach(radio => {
     updateIndicator();
     const selectedRadio = presetControl.querySelector('input[type="radio"]:checked');
     currentPreset = selectedRadio ? selectedRadio.value : "normal";
-    console.log("Preset updated to:", currentPreset);
     chrome.storage.sync.set({ currentPreset: currentPreset });
     chrome.runtime.sendMessage({ type: "update-preset", preset: currentPreset });
   });

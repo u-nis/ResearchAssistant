@@ -18,7 +18,6 @@ chrome.runtime.onConnect.addListener((port) => {
   if (port.name === 'explanation-stream') {
     if (!globalChat) {
       globalChat = model.startChat({});
-      console.log("Started initial chat session.");
     }
 
     port.onMessage.addListener(async (msg) => {
@@ -27,25 +26,21 @@ chrome.runtime.onConnect.addListener((port) => {
 
         // Check cache before making an API call.
         if (explanationCache[term]) {
-          console.log(`Returning cached explanation for '${term}'.`);
           port.postMessage({ token: explanationCache[term], done: true });
           return;
         }
 
         try {
           const prompt = createExplanationPrompt(term);
-          console.log("Appending explanation prompt:", prompt);
           const result = await globalChat.sendMessageStream(prompt);
           let fullText = "";
 
           for await (const chunk of result.stream) {
             const token = chunk.text();
-            console.log("Streaming token (explanation):", token);
             fullText += token;
             port.postMessage({ token });
           }
 
-          console.log("Full explanation response:", fullText);
           explanationCache[term] = fullText; 
           port.postMessage({ done: true });
         } catch (error) {
@@ -63,25 +58,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     globalChat = model.startChat({});
     explanationCache = {};
     contextAdded = false;
-    console.log("Cleared global chat and cache (new page load).");
     sendResponse({ success: true });
     return true;
   }
   
   if (request.type === 'add-context') {
     if (contextAdded) {
-      console.log("Context has already been added for this page. Ignoring duplicate request.");
       sendResponse({ success: false, error: "Context already added." });
       return true;
     }
 
     const content = request.content;
-    console.log("Received context of length:", content.length);
     const prompt = "Use the following as context for further explanations of my terms, you do not need to respond to this message: " + content;
 
     if (!globalChat) {
       globalChat = model.startChat({});
-      console.log("Started new chat with context.");
     }
 
     // Reset cache when adding context.
@@ -90,7 +81,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     globalChat.sendMessage(prompt)
       .then(() => {
-        console.log("Context added to chat, cache reset.");
         sendResponse({ success: true });
       })
       .catch((error) => {
@@ -105,7 +95,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // Reset the cache when preset changes.
     explanationCache = {};
     currentPreset = request.preset;
-    console.log("Background: currentPreset updated to", currentPreset, "and cache reset.");
     sendResponse({ success: true });
   }
 });
