@@ -1,6 +1,9 @@
 let popupIcon = null;
 let responseBox = null;
-
+chrome.runtime.sendMessage({ type: 'clear-chat' }, (response) => {
+    console.log("Clear chat response:", response);
+  });
+  
 document.addEventListener("mouseup", () => {
   setTimeout(() => {
     const selection = window.getSelection();
