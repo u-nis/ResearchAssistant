@@ -26,36 +26,53 @@ document.addEventListener("mousedown", (e) => {
   }
 });
 
+
 function createIcon(rect, selectedText) {
   removeIcon();
-  
+
   popupIcon = document.createElement("div");
-  popupIcon.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="12" cy="12" r="10"></circle>
-    <line x1="12" y1="16" x2="12" y2="12"></line>
-    <line x1="12" y1="8" x2="12" y2="8"></line>
-  </svg>`;
-  
+  popupIcon.innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </svg>`;
+
   Object.assign(popupIcon.style, {
     position: "absolute",
     left: `${window.scrollX + rect.right + 5}px`,
     top: `${window.scrollY + rect.top - 5}px`,
     cursor: "pointer",
     backgroundColor: "#ffffff",
-    padding: "5px",
+    padding: "4px",
     borderRadius: "50%",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-    zIndex: "1000"
+    boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14)",
+    zIndex: "1000",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  });
+
+  // Add hover effects
+  popupIcon.addEventListener('mouseenter', () => {
+    popupIcon.style.backgroundColor = '#f8f9fa';
+    popupIcon.style.transform = 'scale(1.05)';
+  });
+
+  popupIcon.addEventListener('mouseleave', () => {
+    popupIcon.style.backgroundColor = '#ffffff';
+    popupIcon.style.transform = 'scale(1)';
   });
 
   document.body.appendChild(popupIcon);
-  
+
   popupIcon.addEventListener("mousedown", (e) => {
     e.stopPropagation();
     removeIcon();
     openResponseBox(rect, selectedText);
   });
 }
+
 
 function removeIcon() {
   if (popupIcon) {
@@ -258,13 +275,6 @@ function formatStreamingResponse(text) {
     return text;
   }
 }
-
-
-
-
-
-
-
 
 function removeResponseBox() {
   if (responseBox) {
