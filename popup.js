@@ -1,4 +1,4 @@
-document.getElementById("getContextBtn").addEventListener("click", async () => {
+document.getElementById("addContextBtn").addEventListener("click", async () => {
     // Query the active tab in the current window.
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
@@ -9,6 +9,6 @@ document.getElementById("getContextBtn").addEventListener("click", async () => {
     });
     
     // Send the result to the background script.
-    chrome.runtime.sendMessage({ type: 'get-context', content: result });
+    chrome.runtime.sendMessage({ type: 'add-context', content: result });
   });
   
