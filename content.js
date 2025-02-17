@@ -16,6 +16,7 @@ document.addEventListener("mouseup", () => {
   }, 50);
 });
 
+
 document.addEventListener("mousedown", (e) => {
   if (popupIcon && !popupIcon.contains(e.target)) {
     removeIcon();
@@ -25,30 +26,6 @@ document.addEventListener("mousedown", (e) => {
   }
 });
 
-
-function loadCustomFont() {
-  const style = document.createElement('style');
-  style.textContent = `
-      @font-face {
-          font-family: 'Google Sans';
-          src: url('https://fonts.gstatic.com/s/googlesans/v16/4UaGrENHsxJlGDuGo1OIlL3Owp4.woff2') format('woff2');
-          font-weight: 400;
-      }
-      @font-face {
-          font-family: 'Google Sans';
-          src: url('https://fonts.gstatic.com/s/googlesans/v16/4UabrENHsxJlGDuGo1OIlLU94YtzCwM.woff2') format('woff2');
-          font-weight: 500;
-      }
-      @font-face {
-          font-family: 'Google Sans';
-          src: url('https://fonts.gstatic.com/s/googlesans/v16/4UabrENHsxJlGDuGo1OIlLV154tzCwM.woff2') format('woff2');
-          font-weight: 700;
-      }
-  `;
-  document.head.appendChild(style);
-}
-
-loadCustomFont();
 
 function createIcon(rect, selectedText) {
   removeIcon();
@@ -132,8 +109,9 @@ function openResponseBox(rect, selectedText) {
   
   // Set up the initial content.
   responseBox.innerHTML = `
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-    <div style="font-family: 'Google Sans', sans-serif; font-weight: 500; color: #1a73e8;">Research Assistant</div>
+  
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="font-family: 'Open Sans', sans-serif; font-weight: 700; color: #1a73e8;">Research Assistant</div>
     <div id="closeButton" style="cursor: pointer; padding: 4px">✕</div>
   </div>
   <div id="llmResponse" style="min-height: 80px;">
@@ -152,85 +130,67 @@ closeButton.addEventListener('click', removeResponseBox);
   
   const style = document.createElement('style');
 style.textContent = `
+    @font-face {
+      font-family: 'Open Sans';
+      src: url(${chrome.runtime.getURL('fonts/OpenSans-Regular.ttf')}) format('truetype');
+      font-weight: 400;
+    }
+    @font-face {
+      font-family: 'Open Sans';
+      src: url(${chrome.runtime.getURL('fonts/OpenSans-Bold.ttf')}) format('truetype');
+      font-weight: 700;
+    }
+    @font-face {
+      font-family: 'Open Sans';
+      src: url(${chrome.runtime.getURL('fonts/OpenSans-italic.ttf')}) format('truetype');
+      font-weight: 300;
+    }
     @keyframes pulse {
       0% { transform: scale(0.8); opacity: 0.5; }
       50% { transform: scale(1.2); opacity: 1; }
       100% { transform: scale(0.8); opacity: 0.5; }
     }
-    .dot {
-      width: 8px;
-      height: 8px;
-      background-color: #1a73e8;
-      border-radius: 50%;
-    }
     #llmResponse {
-      font-family: 'Google Sans', sans-serif;
+      font-family: 'Open Sans', sans-serif;
       font-size: 15px;
       line-height: 1.6;
     }
     #llmResponse strong {
-      font-family: 'Google Sans', sans-serif;
-      font-weight: 500;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 700;
+      margin: 0;  
+      padding: 0;
+
     }
-    #llmResponse h2 {
-      font-family: 'Google Sans', sans-serif;
-      font-size: 16px;
+      #llmResponse h1 {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 18px;
       font-weight: 500;
-      margin: 12px 0 8px;
       color: #1a73e8;
     }
+    #llmResponse h2 {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      color: #557338;
+    }
     #llmResponse p {
-      font-family: 'Google Sans', sans-serif;
-      margin: 8px 0;
+      font-family: 'Open Sans', sans-serif;
     }
     #llmResponse ul {
-      font-family: 'Google Sans', sans-serif;
-      margin: 8px 0;
-      padding-left: 20px;
+      font-family: 'Open Sans', sans-serif;
+      padding-left: 1px;
     }
-    #llmResponse li {
-      font-family: 'Google Sans', sans-serif;
-      margin: 4px 0;
-    }
-
     #llmResponse ul {
-      list-style: none;
-      padding: 0;
-      margin: 8px 0;
+      font-family: 'Open Sans', sans-serif;
+      padding: 0px;
+    }
+    #llmResponse em {
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 300;
     }
 
-    #llmResponse li {
-      display: flex;
-      align-items: baseline;
-      margin: 6px 0;
-    }
 
-    #llmResponse li:before {
-      content: '';
-      display: inline-block;
-      width: 4px;
-      height: 4px;
-      background-color: #1a73e8;
-      border-radius: 50%;
-      margin-right: 10px;
-      margin-top: 8px;
-    }
-
-    .bullet-point {
-      display: flex;
-      align-items: baseline;
-      margin: 6px 0;
-    }
-
-    .bullet-dot {
-      display: inline-block;
-      width: 4px;
-      height: 4px;
-      background-color: #1a73e8;
-      border-radius: 50%;
-      margin-right: 10px;
-      margin-top: 8px;
-    }
 `;
   
   document.head.appendChild(style);
@@ -260,53 +220,56 @@ style.textContent = `
   });
 }
 
-function normalizeSpacing(text) {
-  // Remove multiple consecutive blank lines (more than one newline)
-  return text.replace(/\n\s*\n\s*\n/g, '\n\n');
-}
-
-// ctrl z
 
 function formatStreamingResponse(text) {
   try {
-    // Clean up text first
-    let cleanText = text
-      .replace(/\*+/g, '')  // Remove asterisks
-      .trim();
+    // Remove extra asterisks and spaces
+    let formatted = text.trim();
 
-    const formattedText = cleanText
-      // Format main section headers (case-insensitive, flexible dashes/spaces)
-      .replace(/^(Definition|Context|Real[-\s]World Examples|Related Key Concepts):/gim, 
-        (_, header) => `<div style='color: #1967D2; font-weight: bold; font-size: 16px; margin-top: 6px; margin-bottom: 2px;'>${header}:</div>`)
+    // Format **bold** text → <strong>
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-      // Format subsection headers and key terms with reduced spacing
-      .replace(/(^|\n)([A-Za-z\s-]+):\s/g, (match, newline, p1) => {
-        if (["Definition", "Context", "Real-World Examples", "Related Key Concepts"].includes(p1.toLowerCase())) {
-          return match; // Prevents double formatting
+    // Format *italic* text → <em>
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Format `inline code` → <code>
+    formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Split text into lines for further processing
+    let lines = formatted.split('\n');
+
+    let output = [];
+    let inList = false;
+
+    lines.forEach(line => {
+      // Handle bullet points (* or -)
+      if (/^\s*[\*\-]\s+(.*)/.test(line)) {
+        if (!inList) {
+          inList = true;
+          output.push('<ul>'); // Start unordered list
         }
-        return `${newline}<span style="color: #1a73e8; font-weight: 500; display: inline-block; margin-top: 2px;">${p1}:</span> `;
-      })
+        let item = line.replace(/^\s*[\*\-]\s+/, '').trim();
+        output.push(`<li>${item}</li>`); // Add list item
+      } else {
+        if (inList) {
+          output.push('</ul>'); // Close list if a new non-list line starts
+          inList = false;
+        }
 
-      // Format bullet points with minimal spacing
-      .replace(/\n\s*[-•*]\s*(.*?)(?:\n|$)/g, `
-        <div style="display: flex; align-items: baseline; margin: 2px 0;">
-          <span style="
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            background-color: #1a73e8;
-            border-radius: 50%;
-            margin-right: 10px;
-            margin-top: 3px;
-          "></span>
-          <span style="flex: 1;">$1</span>
-        </div>`)
+        // Format section headers like "Definition:", "Real-world applications:"
+        if (/^(Definition|Real-world applications|Related key concepts):/i.test(line)) {
+          output.push(`<h2>${line}</h2>`);
+        } else {
+          output.push(`<p>${line}</p>`);
+        }
+      }
+    });
 
-      // Handle line breaks with minimal spacing
-      .replace(/\n\n+/g, '<div style="margin: 2px 0;"></div>')  // Reduced from 8px to 2px
-      .replace(/\n/g, '<br>')
+    if (inList) {
+      output.push('</ul>'); // Close list if still open at end
+    }
 
-    return formattedText.trim();
+    return output.join('');
   } catch (error) {
     console.error('Error formatting response:', error);
     return text;
