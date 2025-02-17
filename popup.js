@@ -16,13 +16,17 @@ const checkIcon = `
 </svg>
 `;
 
-// Set initial icon (plus).
-addContextBtn.innerHTML = plusIcon;
+// On load, restore button icon state from storage (default: plus).
+chrome.storage.sync.get("contextIconState", (data) => {
+  const iconState = data.contextIconState || "plus";
+  addContextBtn.innerHTML = iconState === "check" ? checkIcon : plusIcon;
+});
 
 // Content Aware button click behavior.
 addContextBtn.addEventListener("click", async () => {
-  // Optional: add a temporary animation class.
-  addContextBtn.classList.add("clicked");
+  // Change icon to checkmark permanently and save state.
+  addContextBtn.innerHTML = checkIcon;
+  chrome.storage.sync.set({ contextIconState: "check" });
 
   // Execute your context extraction.
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -31,12 +35,6 @@ addContextBtn.addEventListener("click", async () => {
     func: () => document.body.innerText,
   });
   chrome.runtime.sendMessage({ type: "add-context", content: result });
-
-  // Change icon to checkmark after a short delay.
-  setTimeout(() => {
-    addContextBtn.innerHTML = checkIcon;
-    addContextBtn.classList.remove("clicked");
-  }, 300);
 });
 
 // Function to update disabled styling for button and segmented control.
@@ -49,7 +47,7 @@ function updateDisabledStyles(enabled) {
   }
 }
 
-// On load, get state from storage (default: enabled).
+// On load, get extension state (default: enabled).
 chrome.storage.sync.get("extensionEnabled", (data) => {
   let enabled = data.extensionEnabled;
   if (enabled === undefined) {
@@ -71,32 +69,50 @@ toggleCheckbox.addEventListener("change", () => {
   });
 });
 
-// Preset segmented control logic.
+// Segmented control for presets.
 const radioButtons = presetControl.querySelectorAll('input[type="radio"]');
 const indicator = presetControl.querySelector(".indicator");
 let currentPreset = "normal"; // default preset
 
-const updateIndicator = () => {
+// On load, get preset state (default: normal).
+chrome.storage.sync.get("currentPreset", (data) => {
+  currentPreset = data.currentPreset || "normal";
+  radioButtons.forEach((radio) => {
+    radio.checked = (radio.value === currentPreset);
+  });
+  updateIndicator(false); // update indicator without animation on load
+  console.log("Popup: currentPreset loaded as", currentPreset);
+});
+
+const updateIndicator = (animate = true) => {
   let selectedIndex = 0;
   radioButtons.forEach((radio, index) => {
     if (radio.checked) {
       selectedIndex = index;
     }
   });
+  if (!animate) {
+    indicator.style.transition = "none";
+  } else {
+    indicator.style.transition = "transform 0.3s ease";
+  }
   indicator.style.transform = `translateX(${selectedIndex * 100}%)`;
+  if (!animate) {
+    setTimeout(() => {
+      indicator.style.transition = "transform 0.3s ease";
+    }, 50);
+  }
 };
 
 radioButtons.forEach(radio => {
-  radio.addEventListener("change", updateIndicator);
+  radio.addEventListener("change", () => {
+    updateIndicator();
+    const selectedRadio = presetControl.querySelector('input[type="radio"]:checked');
+    currentPreset = selectedRadio ? selectedRadio.value : "normal";
+    console.log("Preset updated to:", currentPreset);
+    chrome.storage.sync.set({ currentPreset: currentPreset });
+    chrome.runtime.sendMessage({ type: "update-preset", preset: currentPreset });
+  });
 });
 
-// Set initial indicator position.
 updateIndicator();
-
-// Send preset state when changed.
-presetControl.addEventListener("change", () => {
-  const selectedRadio = presetControl.querySelector('input[type="radio"]:checked');
-  currentPreset = selectedRadio ? selectedRadio.value : "normal";
-  console.log("Preset updated to:", currentPreset);
-  chrome.runtime.sendMessage({ type: "update-preset", preset: currentPreset });
-});
