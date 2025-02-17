@@ -56,7 +56,7 @@ function removeIcon() {
   }
 }
 
-// Open the response box beneath the selected text and update with Gemini output.
+// Open the response box beneath the selected text and stream Gemini output.
 function openResponseBox(rect, selectedText) {
   removeResponseBox(); // Clear any existing box
   
@@ -65,8 +65,7 @@ function openResponseBox(rect, selectedText) {
   responseBox.style.left = `${window.scrollX + rect.left}px`;
   responseBox.style.top = `${window.scrollY + rect.bottom + 10}px`;
   responseBox.style.width = "250px";
-  responseBox.style.minHeight = "150px"; // Minimum height
-  // Remove fixed height so the box adapts to its content.
+  responseBox.style.minHeight = "150px"; // Minimum height; adapts to content
   responseBox.style.backgroundColor = "white";
   responseBox.style.border = "1px solid black";
   responseBox.style.borderRadius = "5px";
@@ -75,6 +74,7 @@ function openResponseBox(rect, selectedText) {
   responseBox.style.zIndex = "1000";
   responseBox.style.color = "black"; // Force text color to black
   
+  // Set up the initial content.
   responseBox.innerHTML = `
     <div style="font-size:14px;font-weight:bold;margin-bottom:5px;">Research Assistant</div>
     <div id="llmResponse" style="min-height:80px;">Loading explanation...</div>
@@ -82,20 +82,26 @@ function openResponseBox(rect, selectedText) {
   
   document.body.appendChild(responseBox);
   
-  // Send the selected term to the background script for Gemini output.
-  chrome.runtime.sendMessage(
-    { type: 'get-explanation', term: selectedText },
-    (response) => {
-      const llmDiv = document.getElementById("llmResponse");
-      if (llmDiv) {
-        if (response && response.success) {
-          llmDiv.textContent = response.data;
-        } else {
-          llmDiv.textContent = "Error: " + (response ? response.error : "No response");
-        }
-      }
+  // Open a long-lived connection (port) for streaming.
+  const port = chrome.runtime.connect({ name: 'explanation-stream' });
+  port.postMessage({ type: 'get-explanation', term: selectedText });
+  
+  // Clear the placeholder text.
+  const llmDiv = document.getElementById("llmResponse");
+  llmDiv.textContent = "";
+  
+  // Listen for streamed tokens.
+  port.onMessage.addListener((msg) => {
+    if (msg.token) {
+      llmDiv.textContent += msg.token;
+    } else if (msg.done) {
+      console.log("Streaming complete.");
+      port.disconnect();
+    } else if (msg.error) {
+      llmDiv.textContent = "Error: " + msg.error;
+      port.disconnect();
     }
-  );
+  });
 }
 
 // Remove the response box.

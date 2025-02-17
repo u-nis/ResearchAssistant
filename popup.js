@@ -1,23 +1,14 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const explanationDiv = document.getElementById('explanation');
-    const explainButton = document.getElementById('getExplanation');
-
-    explainButton.addEventListener('click', async () => {
-        explanationDiv.textContent = 'Loading explanation...';
-        
-        try {
-            const response = await chrome.runtime.sendMessage({
-                type: 'get-explanation'
-            });
-
-            if (response.success) {
-                explanationDiv.textContent = response.data;
-            } else {
-                explanationDiv.textContent = 'Error: ' + response.error;
-            }
-        } catch (error) {
-            explanationDiv.textContent = 'Error: Failed to get explanation';
-            console.error(error);
-        }
+document.getElementById("getContextBtn").addEventListener("click", async () => {
+    // Query the active tab in the current window.
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    // Use chrome.scripting.executeScript to run code in the tab.
+    const [{ result }] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => document.body.innerText,
     });
-});p
+    
+    // Send the result to the background script.
+    chrome.runtime.sendMessage({ type: 'get-context', content: result });
+  });
+  
