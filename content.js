@@ -222,17 +222,19 @@ style.textContent = `
   
   // Clear the placeholder text.
   const llmDiv = document.getElementById("llmResponse");
-  llmDiv.textContent = "";
+  let currentText = "";
   
   // Listen for streamed tokens.
   port.onMessage.addListener((msg) => {
     if (msg.token) {
-      llmDiv.textContent += msg.token;
+      currentText += msg.token;
+      // Format the accumulated text
+      llmDiv.innerHTML = formatStreamingResponse(currentText);
     } else if (msg.done) {
       console.log("Streaming complete.");
       port.disconnect();
     } else if (msg.error) {
-      llmDiv.textContent = "Error: " + msg.error;
+      llmDiv.innerHTML = `<div style="color: #d32f2f;">Error: ${msg.error}</div>`;
       port.disconnect();
     }
   });
@@ -243,45 +245,57 @@ function normalizeSpacing(text) {
   return text.replace(/\n\s*\n\s*\n/g, '\n\n');
 }
 
-function formatResponse(text) {
-  if (!text || typeof text !== 'string') {
-    return '<div style="color: #d32f2f;">Error: Invalid response format</div>';
-  }
+// ctrl z
 
+function formatStreamingResponse(text) {
   try {
-    // First normalize the spacing
-    const normalizedText = normalizeSpacing(text);
-    
-    const styledText = normalizedText
-      .replace(/\*\*(.*?)\*\*/g, '<span style="font-weight: 500; color: #1a73e8">$1</span>')
-      .replace(/[•\*]\s*(.*?)(?:\n|$)/g, `
-        <div style="display: flex; align-items: baseline; margin: 1px 0;">
+    // Clean up text first
+    let cleanText = text
+      .replace(/\*+/g, '')  // Remove asterisks
+      .trim();
+
+    const formattedText = cleanText
+      // Format main section headers (case-insensitive, flexible dashes/spaces)
+      .replace(/^(Definition|Context|Real[-\s]World Examples|Related Key Concepts):/gim, 
+        (_, header) => `<div style='color: #1967D2; font-weight: bold; font-size: 16px; margin-top: 6px; margin-bottom: 2px;'>${header}:</div>`)
+
+      // Format subsection headers and key terms with reduced spacing
+      .replace(/(^|\n)([A-Za-z\s-]+):\s/g, (match, newline, p1) => {
+        if (["Definition", "Context", "Real-World Examples", "Related Key Concepts"].includes(p1.toLowerCase())) {
+          return match; // Prevents double formatting
+        }
+        return `${newline}<span style="color: #1a73e8; font-weight: 500; display: inline-block; margin-top: 2px;">${p1}:</span> `;
+      })
+
+      // Format bullet points with minimal spacing
+      .replace(/\n\s*[-•*]\s*(.*?)(?:\n|$)/g, `
+        <div style="display: flex; align-items: baseline; margin: 2px 0;">
           <span style="
             display: inline-block;
-            width: 4px;
-            height: 4px;
-            background-color:rgb(26, 115, 232);
+            width: 6px;
+            height: 6px;
+            background-color: #1a73e8;
             border-radius: 50%;
-            margin-right: 6px;
-            margin-top: 4px;
+            margin-right: 10px;
+            margin-top: 3px;
           "></span>
           <span style="flex: 1;">$1</span>
         </div>`)
-      .replace(/\n\n/g, '<div style="margin: 6px 0;"></div>')
-      .replace(/(Definition:|Context:|Real-World Examples:|Related Key Concepts:)/g, 
-        '<div style="font-weight: 500; color:rgb(26, 115, 232); margin-top: 4px; margin-bottom: 2px;">$1</div>')
-        .replace(/\n\n/g, '<div style="margin: 2px 0;"></div>');
 
-    return `
-      <div style="font-family: 'Google Sans', sans-serif; line-height: 1.3;">
-        ${styledText}
-      </div>
-    `.trim();
+      // Handle line breaks with minimal spacing
+      .replace(/\n\n+/g, '<div style="margin: 2px 0;"></div>')  // Reduced from 8px to 2px
+      .replace(/\n/g, '<br>')
+
+    return formattedText.trim();
   } catch (error) {
     console.error('Error formatting response:', error);
-    return '<div style="color: #d32f2f;">Error formatting response</div>';
+    return text;
   }
 }
+
+
+
+
 
 
 function removeResponseBox() {
