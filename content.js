@@ -1,6 +1,11 @@
 let popupIcon = null;
 let responseBox = null;
 
+// At the very top of your content.js:
+chrome.storage.sync.remove("contextIconState", () => {
+  console.log("Reset contextIconState to default on page refresh.");
+});
+
 let extensionEnabled = true; // Default is enabled
 
 // Get the saved state from storage on load.
