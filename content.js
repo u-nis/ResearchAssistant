@@ -109,8 +109,9 @@ function openResponseBox(rect, selectedText) {
   
   // Set up the initial content.
   responseBox.innerHTML = `
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-    <div style="font-family: 'Google Sans', sans-serif; font-weight: 500; color: #1a73e8;">Research Assistant</div>
+  
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="font-family: 'Open Sans', sans-serif; font-weight: 700; color: #1a73e8;">Research Assistant</div>
     <div id="closeButton" style="cursor: pointer; padding: 4px">✕</div>
   </div>
   <div id="llmResponse" style="min-height: 80px;">
@@ -157,7 +158,6 @@ style.textContent = `
     #llmResponse strong {
       font-family: 'Open Sans', sans-serif;
       font-weight: 700;
-      color: #1a73e8;
       margin: 0;  
       padding: 0;
 
