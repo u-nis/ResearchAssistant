@@ -84,6 +84,8 @@ function removeIcon() {
   }
 }
 
+
+// Open the response box beneath the selected text and stream Gemini output.
 function openResponseBox(rect, selectedText) {
   removeResponseBox();
   
@@ -106,7 +108,9 @@ function openResponseBox(rect, selectedText) {
     letterSpacing: "0.2px",
     color: "#333333"
 });
+
   
+  // Set up the initial content.
   responseBox.innerHTML = `
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
     <div style="font-family: 'Google Sans', sans-serif; font-weight: 500; color: #1a73e8;">Research Assistant</div>
@@ -212,19 +216,26 @@ style.textContent = `
   document.head.appendChild(style);
   document.body.appendChild(responseBox);
   
-  chrome.runtime.sendMessage(
-    { type: 'get-explanation', term: selectedText },
-    (response) => {
-      const llmDiv = document.getElementById("llmResponse");
-      if (llmDiv) {
-        if (response && response.success) {
-          llmDiv.innerHTML = formatResponse(response.data);
-        } else {
-          llmDiv.innerHTML = `<div style="color: #d32f2f;">Error: ${response ? response.error : "No response"}</div>`;
-        }
-      }
+  // Open a long-lived connection (port) for streaming.
+  const port = chrome.runtime.connect({ name: 'explanation-stream' });
+  port.postMessage({ type: 'get-explanation', term: selectedText });
+  
+  // Clear the placeholder text.
+  const llmDiv = document.getElementById("llmResponse");
+  llmDiv.textContent = "";
+  
+  // Listen for streamed tokens.
+  port.onMessage.addListener((msg) => {
+    if (msg.token) {
+      llmDiv.textContent += msg.token;
+    } else if (msg.done) {
+      console.log("Streaming complete.");
+      port.disconnect();
+    } else if (msg.error) {
+      llmDiv.textContent = "Error: " + msg.error;
+      port.disconnect();
     }
-  );
+  });
 }
 
 function normalizeSpacing(text) {
