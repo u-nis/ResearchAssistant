@@ -1,10 +1,36 @@
 let popupIcon = null;
 let responseBox = null;
+
+let extensionEnabled = true; // Default is enabled
+
+// Get the saved state from storage on load.
+chrome.storage.sync.get("extensionEnabled", (data) => {
+  extensionEnabled = data.extensionEnabled !== false; // default true
+  if (!extensionEnabled) {
+    removeIcon();
+    removeResponseBox();
+  }
+});
+
+// Listen for changes in storage to update the extension state.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "sync" && changes.extensionEnabled) {
+    extensionEnabled = changes.extensionEnabled.newValue;
+    console.log("Content script: extensionEnabled updated to", extensionEnabled);
+    if (!extensionEnabled) {
+      removeIcon();
+      removeResponseBox();
+    }
+  }
+});
+
+// Clear chat on load.
 chrome.runtime.sendMessage({ type: 'clear-chat' }, (response) => {
-    console.log("Clear chat response:", response);
-  });
-  
+  console.log("Clear chat response:", response);
+});
+
 document.addEventListener("mouseup", () => {
+  if (!extensionEnabled) return; // Do nothing if disabled.
   setTimeout(() => {
     const selection = window.getSelection();
     const text = selection.toString().trim();
@@ -16,8 +42,8 @@ document.addEventListener("mouseup", () => {
   }, 50);
 });
 
-
 document.addEventListener("mousedown", (e) => {
+  if (!extensionEnabled) return; // Do nothing if disabled.
   if (popupIcon && !popupIcon.contains(e.target)) {
     removeIcon();
   }
@@ -25,7 +51,6 @@ document.addEventListener("mousedown", (e) => {
     removeResponseBox();
   }
 });
-
 
 function createIcon(rect, selectedText) {
   removeIcon();
@@ -53,12 +78,11 @@ function createIcon(rect, selectedText) {
     justifyContent: "center"
   });
 
-  // Add hover effects
+  // Hover effects.
   popupIcon.addEventListener('mouseenter', () => {
     popupIcon.style.backgroundColor = '#f8f9fa';
     popupIcon.style.transform = 'scale(1.05)';
   });
-
   popupIcon.addEventListener('mouseleave', () => {
     popupIcon.style.backgroundColor = '#ffffff';
     popupIcon.style.transform = 'scale(1)';
@@ -73,7 +97,6 @@ function createIcon(rect, selectedText) {
   });
 }
 
-
 function removeIcon() {
   if (popupIcon) {
     popupIcon.remove();
@@ -81,8 +104,6 @@ function removeIcon() {
   }
 }
 
-
-// Open the response box beneath the selected text and stream Gemini output.
 function openResponseBox(rect, selectedText) {
   removeResponseBox();
   
@@ -104,32 +125,30 @@ function openResponseBox(rect, selectedText) {
     lineHeight: "1.0",
     letterSpacing: "0.2px",
     color: "#333333"
-});
+  });
 
-  
-  // Set up the initial content.
   responseBox.innerHTML = `
-  
-  <div style="display: flex; justify-content: space-between; align-items: center;">
-    <div style="font-family: 'Open Sans', sans-serif; font-weight: 700; color: #1a73e8;">Research Assistant</div>
-    <div id="closeButton" style="cursor: pointer; padding: 4px">✕</div>
-  </div>
-  <div id="llmResponse" style="min-height: 80px;">
-    <div class="loading-animation">
-      <div style="display: flex; gap: 4px; justify-content: center;">
-        <div class="dot" style="animation: pulse 1s infinite"></div>
-        <div class="dot" style="animation: pulse 1s infinite .2s"></div>
-        <div class="dot" style="animation: pulse 1s infinite .4s"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-family: 'Open Sans', sans-serif; font-weight: 700; color: #1a73e8;">Research Assistant</div>
+      <div id="closeButton" style="cursor: pointer; padding: 4px">✕</div>
+    </div>
+    <div id="llmResponse" style="min-height: 80px;">
+      <div class="loading-animation">
+        <div style="display: flex; gap: 4px; justify-content: center;">
+          <div class="dot" style="animation: pulse 1s infinite"></div>
+          <div class="dot" style="animation: pulse 1s infinite .2s"></div>
+          <div class="dot" style="animation: pulse 1s infinite .4s"></div>
+        </div>
       </div>
     </div>
-  </div>
-`;
+  `;
 
-const closeButton = responseBox.querySelector('#closeButton');
-closeButton.addEventListener('click', removeResponseBox);
+  const closeButton = responseBox.querySelector('#closeButton');
+  closeButton.addEventListener('click', removeResponseBox);
   
+  // Inject extension-specific styles.
   const style = document.createElement('style');
-style.textContent = `
+  style.textContent = `
     @font-face {
       font-family: 'Open Sans';
       src: url(${chrome.runtime.getURL('fonts/OpenSans-Regular.ttf')}) format('truetype');
@@ -160,9 +179,8 @@ style.textContent = `
       font-weight: 700;
       margin: 0;  
       padding: 0;
-
     }
-      #llmResponse h1 {
+    #llmResponse h1 {
       font-family: 'Open Sans', sans-serif;
       font-size: 18px;
       font-weight: 500;
@@ -189,18 +207,15 @@ style.textContent = `
       font-family: 'Open Sans', sans-serif;
       font-weight: 300;
     }
-
-
-`;
+  `;
   
   document.head.appendChild(style);
   document.body.appendChild(responseBox);
   
-  // Open a long-lived connection (port) for streaming.
+  // Open a long-lived connection for streaming.
   const port = chrome.runtime.connect({ name: 'explanation-stream' });
   port.postMessage({ type: 'get-explanation', term: selectedText });
   
-  // Clear the placeholder text.
   const llmDiv = document.getElementById("llmResponse");
   let currentText = "";
   
@@ -208,7 +223,6 @@ style.textContent = `
   port.onMessage.addListener((msg) => {
     if (msg.token) {
       currentText += msg.token;
-      // Format the accumulated text
       llmDiv.innerHTML = formatStreamingResponse(currentText);
     } else if (msg.done) {
       console.log("Streaming complete.");
@@ -220,43 +234,30 @@ style.textContent = `
   });
 }
 
-
 function formatStreamingResponse(text) {
   try {
-    // Remove extra asterisks and spaces
     let formatted = text.trim();
-
-    // Format **bold** text → <strong>
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Format *italic* text → <em>
     formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // Format `inline code` → <code>
     formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // Split text into lines for further processing
+    
     let lines = formatted.split('\n');
-
     let output = [];
     let inList = false;
-
+    
     lines.forEach(line => {
-      // Handle bullet points (* or -)
       if (/^\s*[\*\-]\s+(.*)/.test(line)) {
         if (!inList) {
           inList = true;
-          output.push('<ul>'); // Start unordered list
+          output.push('<ul>');
         }
         let item = line.replace(/^\s*[\*\-]\s+/, '').trim();
-        output.push(`<li>${item}</li>`); // Add list item
+        output.push(`<li>${item}</li>`);
       } else {
         if (inList) {
-          output.push('</ul>'); // Close list if a new non-list line starts
+          output.push('</ul>');
           inList = false;
         }
-
-        // Format section headers like "Definition:", "Real-world applications:"
         if (/^(Definition|Real-world applications|Related key concepts):/i.test(line)) {
           output.push(`<h2>${line}</h2>`);
         } else {
@@ -264,11 +265,11 @@ function formatStreamingResponse(text) {
         }
       }
     });
-
+    
     if (inList) {
-      output.push('</ul>'); // Close list if still open at end
+      output.push('</ul>');
     }
-
+    
     return output.join('');
   } catch (error) {
     console.error('Error formatting response:', error);
